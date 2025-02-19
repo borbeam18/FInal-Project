@@ -36,3 +36,77 @@
     transform: rotate(360deg);
   }
 }
+
+/* เพิ่ม CSS เพื่อจัดตำแหน่ง modal ให้อยู่กลางหน้าจอ */
+.modal-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* ทำให้ Modal อยู่กลางหน้าจอแม้ในกรณีที่หน้าจอมีขนาดเล็ก */
+}
+
+.cart-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.cart-empty-message {
+  text-align: center;
+  color: #888;
+}
+
+.cart-items {
+  padding: 0;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-bottom: 10px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-actions button {
+  margin-left: 5px;
+}
+
+.cart-total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: right;
+}
+
+.btn-primary, .btn-info {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-warning, .btn-info {
+  border-color: #007bff;
+}
+
+.btn-primary:hover, .btn-info:hover {
+  background-color: #0056b3;
+}
+
+button {
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
