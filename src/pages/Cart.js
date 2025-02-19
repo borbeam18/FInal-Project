@@ -47,6 +47,12 @@ function Cart() {
     );
   };
 
+  // ฟังก์ชันสำหรับเลือกทั้งหมด
+  const toggleSelectAll = () => {
+    const allSelected = selectedItems.length === cart.length && selectedItems.every(item => item.selected);
+    setSelectedItems(cart.map(item => ({ id: item.id, selected: !allSelected })));
+  };
+
   // บันทึกการเลือกสินค้าลงใน localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
   useEffect(() => {
     if (selectedItems.length > 0) {
@@ -104,6 +110,14 @@ function Cart() {
         </>
       ) : (
         <>
+          <div>
+            <input 
+              type="checkbox" 
+              checked={selectedItems.length === cart.length && selectedItems.every(item => item.selected)} 
+              onChange={toggleSelectAll} 
+            />
+            <span>เลือกทั้งหมด</span>
+          </div>
           <ul className="list-group">
             {cart.map((item) => (
               <li className="list-group-item d-flex justify-content-between align-items-center" key={item.id}>
