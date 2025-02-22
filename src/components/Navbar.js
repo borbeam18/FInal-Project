@@ -1,58 +1,42 @@
 import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { FaShoppingCart } from "react-icons/fa";  // นำเข้าไอคอนตะกร้า
+import { FaShoppingCart, FaEye, FaEyeSlash } from "react-icons/fa"; // เพิ่มไอคอนแสดง/ซ่อนรหัสผ่าน
 import "bootstrap/dist/css/bootstrap.min.css";
-import { CartContext } from "../contexts/CartContext"; // นำเข้า CartContext
+import { CartContext } from "../contexts/CartContext";
 
 function Navbar() {
-  const { cart } = useContext(CartContext);  // ดึงข้อมูลจาก CartContext
+  const { cart } = useContext(CartContext);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false); // สำหรับ Login
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false); // สำหรับ Register
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // สำหรับ Confirm Password
 
   const handleLoginModalOpen = () => setShowLoginModal(true);
   const handleLoginModalClose = () => setShowLoginModal(false);
   const handleRegisterModalOpen = () => setShowRegisterModal(true);
   const handleRegisterModalClose = () => setShowRegisterModal(false);
 
-  // คำนวณจำนวนสินค้าทั้งหมดในตะกร้า
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div className="container d-flex justify-content-between align-items-center">
-        {/* โลโก้ */}
         <Link className="navbar-brand" to="/">MyShop</Link>
-
-        {/* แถบค้นหาอยู่ตรงกลาง */}
         <form className="d-flex flex-grow-1 justify-content-center" style={{ maxWidth: "800px" }}>
-          <input 
-            className="form-control me-2" 
-            type="search" 
-            placeholder="ค้นหาสินค้า..." 
-            aria-label="Search" 
-          />
+          <input className="form-control me-2" type="search" placeholder="ค้นหาสินค้า..." aria-label="Search" />
           <button className="btn btn-light" type="submit">ค้นหา</button>
         </form>
-
-        {/* เมนูด้านขวา */}
         <ul className="navbar-nav">
           <li className="nav-item">
             <Link className="nav-link" to="/">หน้าแรก</Link>
           </li>
-
-          {/* เพิ่มปุ่ม Login และ Register */}
           <li className="nav-item">
-            <button className="nav-link btn  me-2" onClick={handleLoginModalOpen}>
-              Login
-            </button>
+            <button className="nav-link btn me-2" onClick={handleLoginModalOpen}>Login</button>
           </li>
           <li className="nav-item">
-            <button className="nav-link btn " onClick={handleRegisterModalOpen}>
-              Register
-            </button>
+            <button className="nav-link btn" onClick={handleRegisterModalOpen}>Register</button>
           </li>
-
-          {/* ปุ่มไอคอนตะกร้า */}
           <li className="nav-item">
             <Link className="nav-link" to="/cart">
               <div className="position-relative">
@@ -69,22 +53,27 @@ function Navbar() {
       </div>
 
       {/* Login Modal */}
-      <div className={`modal fade ${showLoginModal ? "show" : ""}`} style={{ display: showLoginModal ? "block" : "none", backgroundColor: "rgba(0, 0, 0, 0.6)" }} tabIndex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div className={`modal fade ${showLoginModal ? "show" : ""}`} style={{ display: showLoginModal ? "block" : "none", backgroundColor: "rgba(0, 0, 0, 0.6)" }}>
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="loginModalLabel">Login</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={handleLoginModalClose}></button>
+              <h5 className="modal-title">Login</h5>
+              <button type="button" className="btn-close" onClick={handleLoginModalClose}></button>
             </div>
             <div className="modal-body">
               <form>
                 <div className="mb-3">
-                  <label htmlFor="loginEmail" className="form-label">อีเมล</label>
-                  <input type="email" className="form-control" id="loginEmail" required />
+                  <label className="form-label">อีเมล</label>
+                  <input type="email" className="form-control" required />
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="loginPassword" className="form-label">รหัสผ่าน</label>
-                  <input type="password" className="form-control" id="loginPassword" required />
+                <div className="mb-3 position-relative">
+                  <label className="form-label">รหัสผ่าน</label>
+                  <div className="input-group">
+                    <input type={showLoginPassword ? "text" : "password"} className="form-control" required />
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowLoginPassword(!showLoginPassword)}>
+                      {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" className="btn btn-primary w-100">เข้าสู่ระบบ</button>
               </form>
@@ -94,26 +83,48 @@ function Navbar() {
       </div>
 
       {/* Register Modal */}
-      <div className={`modal fade ${showRegisterModal ? "show" : ""}`} style={{ display: showRegisterModal ? "block" : "none", backgroundColor: "rgba(0, 0, 0, 0.6)" }} tabIndex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+      <div className={`modal fade ${showRegisterModal ? "show" : ""}`} style={{ display: showRegisterModal ? "block" : "none", backgroundColor: "rgba(0, 0, 0, 0.6)" }}>
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="registerModalLabel">Register</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={handleRegisterModalClose}></button>
+              <h5 className="modal-title">Register</h5>
+              <button type="button" className="btn-close" onClick={handleRegisterModalClose}></button>
             </div>
             <div className="modal-body">
               <form>
                 <div className="mb-3">
-                  <label htmlFor="registerEmail" className="form-label">อีเมล</label>
-                  <input type="email" className="form-control" id="registerEmail" required />
+                  <label className="form-label">ชื่อผู้ใช้</label>
+                  <input type="text" className="form-control" required />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="registerPassword" className="form-label">รหัสผ่าน</label>
-                  <input type="password" className="form-control" id="registerPassword" required />
+                  <label className="form-label">เบอร์โทร</label>
+                  <input type="tel" className="form-control" required />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="registerConfirmPassword" className="form-label">ยืนยันรหัสผ่าน</label>
-                  <input type="password" className="form-control" id="registerConfirmPassword" required />
+                  <label className="form-label">ที่อยู่</label>
+                  <input type="text" className="form-control" required />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">อีเมล</label>
+                  <input type="email" className="form-control" required />
+                </div>
+                <div className="mb-3 position-relative">
+                  <label className="form-label">รหัสผ่าน</label>
+                  <div className="input-group">
+                    <input type={showRegisterPassword ? "text" : "password"} className="form-control" required />
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
+                      {showRegisterPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-3 position-relative">
+                  <label className="form-label">ยืนยันรหัสผ่าน</label>
+                  <div className="input-group">
+                    <input type={showConfirmPassword ? "text" : "password"} className="form-control" required />
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" className="btn btn-primary w-100">สมัครสมาชิก</button>
               </form>
