@@ -29,21 +29,28 @@ const verifyToken = (req, res, next) => {
     });
 };
 
+const verifyAdmin = (req, res, next) => {
+    if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+    }
+    next();
+};
+
 
 // 📌 **1. ลงทะเบียนลูกค้า**
 app.post("/register", (req, res) => {
-    const { fullName, email, phone, address, password } = req.body;
+    const { fullName, email, phone, address, password, status } = req.body;
     const hashPassword = bcrypt.hashSync(password, 8);
 
-    db.query("INSERT INTO tb_customers (FullName, Email, Phone, Address, Password) VALUES (?, ?, ?, ?, ?)", 
-    [fullName, email, phone, address, hashPassword], (err, result) => {
+    db.query("INSERT INTO tb_customers (FullName, Email, Phone, Address, Password, Status) VALUES (?, ?, ?, ?, ?, ?)", 
+    [fullName, email, phone, address, hashPassword, status], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: "Customer registered successfully" });
     });
 });
 
 
-// 📌 **2. Login**
+// 📌 **Login พร้อมแยก User และ Admin**
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -194,6 +201,93 @@ app.get("/customers", verifyToken, (req, res) => {
     db.query("SELECT * FROM tb_customers", (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
+    });
+});
+
+// 📌 ** หน้าการชำระเงิน (Payment Page)**
+app.post("/payments", verifyToken, (req, res) => {
+    const { orderID, paymentMethod } = req.body;
+    const transactionDate = new Date();
+    db.query("INSERT INTO tb_payments (OrderID, PaymentMethod, PaymentStatus, TransactionDate) VALUES (?, ?, 'Pending', ?)", [orderID, paymentMethod, transactionDate], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Payment recorded successfully", paymentID: result.insertId });
+    });
+});
+
+// 📌 ** หน้าติดตามสถานะคำสั่งซื้อ (Order Tracking Page)**
+app.get("/orderstatus/:id", verifyToken, (req, res) => {
+    const { id } = req.params;
+    db.query("SELECT o.OrderID, o.Status, os.Updated_at FROM tb_orders o JOIN tb_order_status os ON o.OrderID = os.OrderID WHERE o.OrderID = ? ORDER BY os.Updated_at DESC LIMIT 1", [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ message: "Order not found" });
+        res.json(results[0]);
+    });
+});
+
+
+// ======================= 🛒 API ตะกร้าสินค้า (Cart) =======================
+
+// เพิ่มสินค้าลงตะกร้า
+app.post("/cart", (req, res) => {
+    const { customerID, productId, quantity } = req.body;
+
+    // เช็กค่าที่ส่งมาว่าไม่มีค่า null หรือ undefined
+    if (!customerID || !productId || !quantity || quantity <= 0) {
+        return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    // ตรวจสอบว่าสินค้าอยู่ในตะกร้าหรือยัง
+    db.query(
+        "SELECT * FROM tb_cart WHERE CustomerID = ? AND ProductID = ?",
+        [customerID, productId],
+        (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            if (results.length > 0) {
+                // ถ้ามีสินค้าอยู่แล้ว ให้เพิ่มจำนวนสินค้า
+                db.query(
+                    "UPDATE tb_cart SET Quantity = Quantity + ? WHERE CustomerID = ? AND ProductID = ?",
+                    [quantity, customerID, productId],
+                    (err) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        res.json({ message: "Cart updated successfully" });
+                    }
+                );
+            } else {
+                // ถ้ายังไม่มีสินค้าในตะกร้า ให้เพิ่มแถวใหม่
+                db.query(
+                    "INSERT INTO tb_cart (CustomerID, ProductID, Quantity) VALUES (?, ?, ?)",
+                    [customerID, productId, quantity],
+                    (err) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        res.json({ message: "Added to cart" });
+                    }
+                );
+            }
+        }
+    );
+});
+
+
+// ดึงรายการตะกร้าสินค้าของผู้ใช้
+app.get("/cart/:customerID", (req, res) => {
+    const customerID = req.params.customerID;
+    db.query(
+        "SELECT c.CartID, p.ProductName, p.Price, c.Quantity FROM tb_cart c JOIN tb_products p ON c.ProductID = p.ProductID WHERE c.CustomerID = ?",
+        [customerID],
+        (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(results);
+        }
+    );
+});
+
+// ลบสินค้าออกจากตะกร้า
+app.delete("/cart/:id", (req, res) => {
+    const cartId = req.params.id;
+    db.query("DELETE FROM tb_cart WHERE CartID = ?", [cartId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Item removed from cart" });
     });
 });
 
