@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { FaShoppingCart, FaEye, FaEyeSlash } from "react-icons/fa"; // เพิ่มไอคอนแสดง/ซ่อนรหัสผ่าน
+import { FaShoppingCart, FaEye, FaEyeSlash } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { CartContext } from "../contexts/CartContext";
 
@@ -8,14 +8,62 @@ function Navbar() {
   const { cart } = useContext(CartContext);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showLoginPassword, setShowLoginPassword] = useState(false); // สำหรับ Login
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false); // สำหรับ Register
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // สำหรับ Confirm Password
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [registerFullName, setRegisterFullName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPhone, setRegisterPhone] = useState("");
+  const [registerAddress, setRegisterAddress] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerStatus, setRegisterStatus] = useState("active");
 
   const handleLoginModalOpen = () => setShowLoginModal(true);
   const handleLoginModalClose = () => setShowLoginModal(false);
   const handleRegisterModalOpen = () => setShowRegisterModal(true);
   const handleRegisterModalClose = () => setShowRegisterModal(false);
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    const response = await fetch("http://localhost:5000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      alert(data.message);
+      // Save token or perform other actions like redirecting
+    } else {
+      alert(data.message);
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    const response = await fetch("http://localhost:5000/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullName: registerFullName,
+        email: registerEmail,
+        phone: registerPhone,
+        address: registerAddress,
+        password: registerPassword,
+        status: registerStatus,
+      }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      alert(data.message);
+      handleRegisterModalClose();
+    } else {
+      alert(data.error);
+    }
+  };
 
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -61,15 +109,15 @@ function Navbar() {
               <button type="button" className="btn-close" onClick={handleLoginModalClose}></button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={handleLoginSubmit}>
                 <div className="mb-3">
                   <label className="form-label">อีเมล</label>
-                  <input type="email" className="form-control" required />
+                  <input type="email" className="form-control" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
                 </div>
                 <div className="mb-3 position-relative">
                   <label className="form-label">รหัสผ่าน</label>
                   <div className="input-group">
-                    <input type={showLoginPassword ? "text" : "password"} className="form-control" required />
+                    <input type={showLoginPassword ? "text" : "password"} className="form-control" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
                     <button type="button" className="btn btn-outline-secondary" onClick={() => setShowLoginPassword(!showLoginPassword)}>
                       {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
@@ -91,27 +139,27 @@ function Navbar() {
               <button type="button" className="btn-close" onClick={handleRegisterModalClose}></button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={handleRegisterSubmit}>
                 <div className="mb-3">
                   <label className="form-label">ชื่อผู้ใช้</label>
-                  <input type="text" className="form-control" required />
+                  <input type="text" className="form-control" required value={registerFullName} onChange={(e) => setRegisterFullName(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">เบอร์โทร</label>
-                  <input type="tel" className="form-control" required />
+                  <input type="tel" className="form-control" required value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">ที่อยู่</label>
-                  <input type="text" className="form-control" required />
+                  <input type="text" className="form-control" required value={registerAddress} onChange={(e) => setRegisterAddress(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">อีเมล</label>
-                  <input type="email" className="form-control" required />
+                  <input type="email" className="form-control" required value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} />
                 </div>
                 <div className="mb-3 position-relative">
                   <label className="form-label">รหัสผ่าน</label>
                   <div className="input-group">
-                    <input type={showRegisterPassword ? "text" : "password"} className="form-control" required />
+                    <input type={showRegisterPassword ? "text" : "password"} className="form-control" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
                     <button type="button" className="btn btn-outline-secondary" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
                       {showRegisterPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
