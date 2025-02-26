@@ -18,12 +18,13 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product) => {
     const productInCart = cart.find(item => item.id === product.id);
+    const quantityToAdd = product.quantity || 1; // ใช้ค่า 1 ถ้า quantity ไม่มีการกำหนด
     if (productInCart) {
       setCart(cart.map(item =>
-        item.id === product.id ? { ...item, quantity: item.quantity + product.quantity } : item
+        item.id === product.id ? { ...item, quantity: item.quantity + quantityToAdd } : item
       ));
     } else {
-      setCart([...cart, { ...product, quantity: product.quantity }]);
+      setCart([...cart, { ...product, quantity: quantityToAdd }]);
     }
   };
 

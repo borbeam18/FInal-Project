@@ -19,6 +19,7 @@ function Navbar() {
   const [registerPhone, setRegisterPhone] = useState("");
   const [registerAddress, setRegisterAddress] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState(""); // State สำหรับยืนยันรหัสผ่าน
   const [registerStatus, setRegisterStatus] = useState("active");
 
   // State for logged-in user
@@ -33,13 +34,20 @@ function Navbar() {
   useEffect(() => {
     const user = localStorage.getItem('user');
     if (user) {
-      setLoggedInUser(JSON.parse(user)); // Set logged-in user details
+      const userData = JSON.parse(user);
+      const token = userData.token;
+      if (token) {
+        const username = userData.email.split('@')[0];
+        setLoggedInUser({ email: userData.email, username: username });
+      } else {
+        console.log("No token found!");
+      }
     }
   }, []);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:3000/login", { // Make sure backend is running on port 5000
+    const response = await fetch("http://localhost:3000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: loginEmail, password: loginPassword }),
@@ -49,7 +57,8 @@ function Navbar() {
       // Store user data and token in localStorage
       localStorage.setItem('user', JSON.stringify({ email: loginEmail, token: data.token }));
       alert(data.message);
-      setLoggedInUser({ email: loginEmail }); // Update logged-in user state
+      const username = loginEmail.split('@')[0]; // Extract username from email
+      setLoggedInUser({ email: loginEmail, username: username });
       handleLoginModalClose();
     } else {
       alert(data.message);
@@ -58,6 +67,27 @@ function Navbar() {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+
+    // ตรวจสอบว่ารหัสผ่านและยืนยันรหัสผ่านตรงกัน
+    if (registerPassword !== registerPasswordConfirm) {
+      alert("รหัสผ่านไม่ตรงกัน");
+      return;
+    }
+
+    // เช็คว่าอีเมลมีอยู่แล้วในระบบ
+    const responseEmailCheck = await fetch("http://localhost:3000/check-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: registerEmail }),
+    });
+    const emailCheckData = await responseEmailCheck.json();
+    if (!responseEmailCheck.ok || emailCheckData.exists) {
+      alert("อีเมลนี้ถูกใช้แล้ว กรุณาใช้ email อื่น");
+      return;
+    }
+
     const response = await fetch("http://localhost:3000/register", {
       method: "POST",
       headers: {
@@ -83,6 +113,17 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('user'); // Clear user data from localStorage
     setLoggedInUser(null); // Clear the logged-in user from the state
+
+    // Clear login and register form fields
+    setLoginEmail('');
+    setLoginPassword('');
+    setRegisterFullName('');
+    setRegisterEmail('');
+    setRegisterPhone('');
+    setRegisterAddress('');
+    setRegisterPassword('');
+    setRegisterPasswordConfirm(''); // ลบค่าของยืนยันรหัสผ่าน
+    setRegisterStatus('active');
   };
 
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -91,10 +132,6 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div className="container d-flex justify-content-between align-items-center">
         <Link className="navbar-brand" to="/">MyShop</Link>
-        <form className="d-flex flex-grow-1 justify-content-center" onSubmit={""} style={{ maxWidth: "800px" }}>
-          <input className="form-control me-2" type="search" placeholder="ค้นหาสินค้า..." aria-label="Search" />
-          <button className="btn btn-light" type="submit">ค้นหา</button>
-        </form>
         <ul className="navbar-nav">
           <li className="nav-item">
             <Link className="nav-link" to="/">หน้าแรก</Link>
@@ -102,7 +139,7 @@ function Navbar() {
           {loggedInUser ? (
             <>
               <li className="nav-item">
-                <span className="nav-link text-white">Hello, {loggedInUser.email}</span>
+                <span className="nav-link text-white">Hello, {loggedInUser.username}</span> {/* Show username instead of email */}
               </li>
               <li className="nav-item">
                 <button className="nav-link btn" onClick={handleLogout}>Logout</button>
@@ -168,44 +205,40 @@ function Navbar() {
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Register</h5>
+              <h5 className="modal-title">สมัครสมาชิก</h5>
               <button type="button" className="btn-close" onClick={handleRegisterModalClose}></button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleRegisterSubmit}>
                 <div className="mb-3">
-                  <label className="form-label">ชื่อผู้ใช้</label>
+                  <label className="form-label">ชื่อ-นามสกุล</label>
                   <input type="text" className="form-control" required value={registerFullName} onChange={(e) => setRegisterFullName(e.target.value)} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">เบอร์โทร</label>
-                  <input type="tel" className="form-control" required value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">ที่อยู่</label>
-                  <input type="text" className="form-control" required value={registerAddress} onChange={(e) => setRegisterAddress(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">อีเมล</label>
                   <input type="email" className="form-control" required value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} />
                 </div>
+                <div className="mb-3">
+                  <label className="form-label">เบอร์โทรศัพท์</label>
+                  <input type="text" className="form-control" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">ที่อยู่</label>
+                  <textarea className="form-control" rows="3" value={registerAddress} onChange={(e) => setRegisterAddress(e.target.value)}></textarea>
+                </div>
                 <div className="mb-3 position-relative">
                   <label className="form-label">รหัสผ่าน</label>
-                  <div className="input-group">
-                    <input type={showRegisterPassword ? "text" : "password"} className="form-control" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
-                      {showRegisterPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
+                  <input type={showRegisterPassword ? "text" : "password"} className="form-control" required value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} />
+                  <button type="button" className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
+                    {showRegisterPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
                 <div className="mb-3 position-relative">
                   <label className="form-label">ยืนยันรหัสผ่าน</label>
-                  <div className="input-group">
-                    <input type={showConfirmPassword ? "text" : "password"} className="form-control" required />
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
+                  <input type={showConfirmPassword ? "text" : "password"} className="form-control" required value={registerPasswordConfirm} onChange={(e) => setRegisterPasswordConfirm(e.target.value)} />
+                  <button type="button" className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
                 <button type="submit" className="btn btn-primary w-100">สมัครสมาชิก</button>
               </form>

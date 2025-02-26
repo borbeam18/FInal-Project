@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 
+// ใช้ lazy loading สำหรับคอมโพเนนต์
 const Navbar = lazy(() => import("./components/Navbar"));
 const Home = lazy(() => import("./pages/Home"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));

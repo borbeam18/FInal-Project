@@ -82,9 +82,10 @@ app.post("/login", (req, res) => {
 app.get("/products", verifyToken, (req, res) => {
     db.query("SELECT * FROM tb_products", (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+        res.json(results); // ส่งข้อมูลสินค้ากลับไปยัง frontend
     });
 });
+
 
 app.get("/products/:id", verifyToken, (req, res) => {
     const productId = req.params.id;
