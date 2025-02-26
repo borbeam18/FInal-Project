@@ -52,8 +52,7 @@ function Navbar() {
         email: registerEmail,
         phone: registerPhone,
         address: registerAddress,
-        password: registerPassword,
-        status: registerStatus,
+        password: registerPassword
       }),
     });
     const data = await response.json();
@@ -71,7 +70,7 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div className="container d-flex justify-content-between align-items-center">
         <Link className="navbar-brand" to="/">MyShop</Link>
-        <form className="d-flex flex-grow-1 justify-content-center" style={{ maxWidth: "800px" }}>
+        <form className="d-flex flex-grow-1 justify-content-center" onSubmit={""} style={{ maxWidth: "800px" }}>
           <input className="form-control me-2" type="search" placeholder="ค้นหาสินค้า..." aria-label="Search" />
           <button className="btn btn-light" type="submit">ค้นหา</button>
         </form>
