@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaEye, FaEyeSlash } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -21,22 +21,36 @@ function Navbar() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerStatus, setRegisterStatus] = useState("active");
 
+  // State for logged-in user
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
   const handleLoginModalOpen = () => setShowLoginModal(true);
   const handleLoginModalClose = () => setShowLoginModal(false);
   const handleRegisterModalOpen = () => setShowRegisterModal(true);
   const handleRegisterModalClose = () => setShowRegisterModal(false);
 
+  // Fetch logged-in user from localStorage if available
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      setLoggedInUser(JSON.parse(user)); // Set logged-in user details
+    }
+  }, []);
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:5000/login", {
+    const response = await fetch("http://localhost:3000/login", { // Make sure backend is running on port 5000
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: loginEmail, password: loginPassword }),
     });
     const data = await response.json();
     if (response.ok) {
+      // Store user data and token in localStorage
+      localStorage.setItem('user', JSON.stringify({ email: loginEmail, token: data.token }));
       alert(data.message);
-      // Save token or perform other actions like redirecting
+      setLoggedInUser({ email: loginEmail }); // Update logged-in user state
+      handleLoginModalClose();
     } else {
       alert(data.message);
     }
@@ -44,16 +58,18 @@ function Navbar() {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:5000/register", {
+    const response = await fetch("http://localhost:3000/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         fullName: registerFullName,
         email: registerEmail,
         phone: registerPhone,
         address: registerAddress,
         password: registerPassword
-      }),
+      })
     });
     const data = await response.json();
     if (response.ok) {
@@ -62,6 +78,11 @@ function Navbar() {
     } else {
       alert(data.error);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user'); // Clear user data from localStorage
+    setLoggedInUser(null); // Clear the logged-in user from the state
   };
 
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -78,12 +99,25 @@ function Navbar() {
           <li className="nav-item">
             <Link className="nav-link" to="/">หน้าแรก</Link>
           </li>
-          <li className="nav-item">
-            <button className="nav-link btn me-2" onClick={handleLoginModalOpen}>Login</button>
-          </li>
-          <li className="nav-item">
-            <button className="nav-link btn" onClick={handleRegisterModalOpen}>Register</button>
-          </li>
+          {loggedInUser ? (
+            <>
+              <li className="nav-item">
+                <span className="nav-link text-white">Hello, {loggedInUser.email}</span>
+              </li>
+              <li className="nav-item">
+                <button className="nav-link btn" onClick={handleLogout}>Logout</button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li className="nav-item">
+                <button className="nav-link btn me-2" onClick={handleLoginModalOpen}>Login</button>
+              </li>
+              <li className="nav-item">
+                <button className="nav-link btn" onClick={handleRegisterModalOpen}>Register</button>
+              </li>
+            </>
+          )}
           <li className="nav-item">
             <Link className="nav-link" to="/cart">
               <div className="position-relative">

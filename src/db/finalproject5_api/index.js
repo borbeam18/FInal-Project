@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 const JWT_SECRET = "1478";
 
 app.use(cors({
-    origin: "http://localhost:3001",
+    origin: "http://localhost:3000",
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization"
 }));
